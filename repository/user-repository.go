@@ -11,7 +11,7 @@ import (
 
 type UserRepository interface {
 	InsertUser(user entity.User) entity.User
-	UpdateUser(user entity.User) entity.User
+	UpdateUser(user entity.User) (entity.User, error)
 	VerifyCredential(email string, password string) interface{}
 	IsDuplicateEmail(email string) (ctx *gorm.DB)
 	FindByEmail(email string) entity.User
@@ -45,7 +45,7 @@ func (db *userConnection) InsertUser(user entity.User) entity.User {
 	return user
 }
 
-func (db *userConnection) UpdateUser(user entity.User) entity.User {
+func (db *userConnection) UpdateUser(user entity.User) (entity.User, error) {
 	if user.Password != "" {
 		user.Password = hashAndSalt([]byte(user.Password))
 	} else {
@@ -53,8 +53,8 @@ func (db *userConnection) UpdateUser(user entity.User) entity.User {
 		db.connection.Find(&tmpUser, user.ID)
 		user.Password = tmpUser.Password
 	}
-	db.connection.Save(&user)
-	return user
+	err := db.connection.Save(&user)
+	return user, err.Error
 }
 
 func (db *userConnection) VerifyCredential(email string, password string) interface{} {

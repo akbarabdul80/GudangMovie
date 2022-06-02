@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/zerodev/golang_api/config"
 	"github.com/zerodev/golang_api/controller"
+	"github.com/zerodev/golang_api/middleware"
 	"github.com/zerodev/golang_api/repository"
 	"github.com/zerodev/golang_api/service"
 	"gorm.io/gorm"
@@ -14,7 +15,9 @@ var (
 	userRepository repository.UserRepository = repository.NewUserRepository(db)
 	jwtService     service.JWTService        = service.NewJWTService()
 	authService    service.AuthService       = service.NewAuthService(userRepository)
+	userService    service.UserService       = service.NewUserService(userRepository)
 	authController controller.AuthController = controller.NewAuthController(authService, jwtService)
+	userController controller.UserController = controller.NewUserController(userService, jwtService)
 )
 
 func main() {
@@ -25,6 +28,12 @@ func main() {
 	{
 		authRoutes.POST("/login", authController.Login)
 		authRoutes.POST("/register", authController.Register)
+	}
+
+	userRoutes := r.Group("api/user", middleware.AuthorizeJWT(jwtService))
+	{
+		userRoutes.GET("/profile", userController.Profile)
+		userRoutes.POST("/update", userController.Update)
 	}
 
 	// r.GET("/ping", func(c *gin.Context) {
