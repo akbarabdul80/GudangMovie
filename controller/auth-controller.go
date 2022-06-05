@@ -14,6 +14,7 @@ import (
 type AuthController interface {
 	Login(ctx *gin.Context)
 	Register(ctx *gin.Context)
+	RefreshToken(ctx *gin.Context)
 }
 
 type authController struct {
@@ -39,8 +40,9 @@ func (c *authController) Login(ctx *gin.Context) {
 	authResult := c.authService.VerifyCredential(loginDTO.Email, loginDTO.Password)
 
 	if v, ok := authResult.(entity.User); ok {
-		generateToken := c.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10))
-		v.Token = generateToken
+		token, rt := c.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10))
+		v.Token = token
+		v.RefreshToken = rt
 		response := helper.BuildResponse(true, "OK!", v)
 		ctx.JSON(http.StatusOK, response)
 		return
@@ -65,12 +67,41 @@ func (c *authController) Register(ctx *gin.Context) {
 		return
 	} else {
 		createUser := c.authService.RegisterUser(registerDTO)
-		token := c.jwtService.GenerateToken(strconv.FormatUint(createUser.ID, 10))
+		token, rt := c.jwtService.GenerateToken(strconv.FormatUint(createUser.ID, 10))
 		createUser.Token = token
+		createUser.RefreshToken = rt
 		response := helper.BuildResponse(true, "Ok!", createUser)
 		ctx.JSON(http.StatusCreated, response)
 		return
 	}
-	response := helper.BuildErrorResponse("Please check again yout credetial", "Invalid credetial", helper.EmptyObj{})
-	ctx.AbortWithStatusJSON(http.StatusUnauthorized, response)
+}
+
+func (c *authController) RefreshToken(ctx *gin.Context) {
+	authHeader := ctx.GetHeader("Authorization")
+	authRefreshHeader := ctx.GetHeader("Authorization_Refresh")
+
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	tokenRefresh, errTokenRefersh := c.jwtService.ValidateRefreshToken(authRefreshHeader)
+
+	if errToken != nil || errTokenRefersh != nil {
+		panic(errToken.Error())
+	}
+
+	fail, userID := c.jwtService.ValidatePlayload(*token, *tokenRefresh)
+
+	if fail {
+		res := helper.BuildErrorResponse("Failed to process request", "Invalid token", helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusConflict, res)
+		return
+	} else {
+		result := c.authService.FindByID(userID)
+		if v, ok := result.(entity.User); ok {
+			token, rt := c.jwtService.GenerateToken(strconv.FormatUint(v.ID, 10))
+			v.Token = token
+			v.RefreshToken = rt
+			response := helper.BuildResponse(true, "OK!", v)
+			ctx.JSON(http.StatusOK, response)
+			return
+		}
+	}
 }

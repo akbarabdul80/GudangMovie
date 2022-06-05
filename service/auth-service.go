@@ -15,6 +15,7 @@ type AuthService interface {
 	CreateUser(user dto.UserCreateDTO) entity.User
 	RegisterUser(user dto.RegisterDTO) entity.User
 	FindByEmail(email string) entity.User
+	FindByID(userID string) interface{}
 	IsDuplicateEmail(email string) bool
 }
 
@@ -74,6 +75,10 @@ func (service *authService) FindByEmail(email string) entity.User {
 func (service *authService) IsDuplicateEmail(email string) bool {
 	res := service.userRepository.IsDuplicateEmail(email)
 	return !!(res.Error == nil)
+}
+
+func (service *authService) FindByID(userID string) interface{} {
+	return service.userRepository.ProfileUser(userID)
 }
 
 func comparePassword(hashedPwd string, plainPassword []byte) bool {
