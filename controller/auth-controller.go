@@ -83,14 +83,16 @@ func (c *authController) RefreshToken(ctx *gin.Context) {
 	token, errToken := c.jwtService.ValidateToken(authHeader)
 	tokenRefresh, errTokenRefersh := c.jwtService.ValidateRefreshToken(authRefreshHeader)
 
-	if errToken != nil || errTokenRefersh != nil {
-		panic(errToken.Error())
+	if errToken.Error() != "Token is expired" || errTokenRefersh != nil {
+		res := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusConflict, res)
+		return
 	}
 
-	fail, userID := c.jwtService.ValidatePlayload(*token, *tokenRefresh)
+	success, userID := c.jwtService.ValidatePlayload(*token, *tokenRefresh)
 
-	if fail {
-		res := helper.BuildErrorResponse("Failed to process request", "Invalid token", helper.EmptyObj{})
+	if !success {
+		res := helper.BuildErrorResponse("Failed to process request2", "Invalid token", helper.EmptyObj{})
 		ctx.AbortWithStatusJSON(http.StatusConflict, res)
 		return
 	} else {

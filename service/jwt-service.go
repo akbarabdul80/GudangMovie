@@ -123,14 +123,14 @@ func (j *jwtService) ValidateRefreshToken(token string) (*jwt.Token, error) {
 }
 
 func (j *jwtService) ValidatePlayload(token jwt.Token, tokenRefersh jwt.Token) (bool, string) {
-	claims, ok := token.Claims.(*jwtCustomClaim)
-	claimsRt, okRt := tokenRefersh.Claims.(*jwtCustomClaimRefresh)
+	claims, ok := token.Claims.(jwt.MapClaims)
+	claimsRt, okRt := tokenRefersh.Claims.(jwt.MapClaims)
 	if !ok || !okRt {
 		return false, ""
 	}
 
-	if claims.UserID != claimsRt.UserID || claims.RandUUID != claimsRt.RandUUID {
+	if claims["user_id"] != claimsRt["user_id"] || claims["uuid"] != claimsRt["uuid"] {
 		return false, ""
 	}
-	return true, claims.UserID
+	return true, claimsRt["user_id"].(string)
 }

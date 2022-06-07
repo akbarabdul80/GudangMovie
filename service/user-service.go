@@ -30,14 +30,11 @@ func (service *userService) Update(user dto.UserUpdateDTO) (entity.User, error) 
 	if err != nil {
 		log.Fatalf("Failed mapping %v", err.Error())
 	}
-
 	res, err := service.userRepository.UpdateUser(userToUpdate)
-
 	return res, err
 }
 
 func (service *userService) Profile(userID string) entity.User {
 	res := service.userRepository.ProfileUser(userID)
-
 	return res
 }
