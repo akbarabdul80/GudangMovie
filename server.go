@@ -54,6 +54,7 @@ func main() {
 
 		// Task
 		userRoutes.GET("/task", taskController.GetTask)
+		userRoutes.GET("/task-today", taskController.GetTaskToday)
 		userRoutes.PUT("/task", taskController.CreateTask)
 		userRoutes.PATCH("/task", taskController.UpdateTask)
 	}

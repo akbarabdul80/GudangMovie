@@ -11,6 +11,7 @@ import (
 
 type TaskService interface {
 	GetTask(userID uint64) ([]entity.Task, error)
+	GetTaskToday(userID uint64) ([]entity.Task, error)
 	CreateTask(task dto.TaskCreateDTO) (entity.Task, error)
 	UpdateTask(task dto.TaskUpdateDTO) (entity.Task, error)
 }
@@ -27,6 +28,11 @@ func NewTaskService(taskRepo repository.TaskRepository) TaskService {
 
 func (service *taskService) GetTask(userID uint64) ([]entity.Task, error) {
 	res, err := service.taskRepository.GetTask(userID)
+	return res, err
+}
+
+func (service *taskService) GetTaskToday(userID uint64) ([]entity.Task, error) {
+	res, err := service.taskRepository.GetTaskToday(userID)
 	return res, err
 }
 

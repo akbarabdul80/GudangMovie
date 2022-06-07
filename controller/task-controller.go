@@ -13,6 +13,7 @@ import (
 
 type TaskController interface {
 	GetTask(ctx *gin.Context)
+	GetTaskToday(ctx *gin.Context)
 	CreateTask(ctx *gin.Context)
 	UpdateTask(ctx *gin.Context)
 }
@@ -45,6 +46,31 @@ func (c *taskController) GetTask(context *gin.Context) {
 	}
 
 	task, err := c.taskService.GetTask(id)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	res := helper.BuildResponse(true, "OK!", task)
+	context.JSON(200, res)
+}
+
+func (c *taskController) GetTaskToday(context *gin.Context) {
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		panic(errToken.Error())
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	task, err := c.taskService.GetTaskToday(id)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
