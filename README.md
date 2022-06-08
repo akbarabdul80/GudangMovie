@@ -1,3 +1,4 @@
+# Running Server
 ```
 docker build -t server-daily-go . 
 docker-compose up -d
@@ -7,4 +8,9 @@ docker-compose up -d
 
 ```
 sh run.sh
+```
+
+# Postman
+```
+https://www.postman.com/zerodevind/workspace/daily-api/overview
 ```
