@@ -34,7 +34,7 @@ func (c *userController) Update(context *gin.Context) {
 	err := context.ShouldBindJSON(&user)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		context.JSON(http.StatusOK, response)
 		return
 	}
 

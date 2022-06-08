@@ -64,7 +64,7 @@ func (j *jwtService) GenerateToken(UserID string) (string, string) {
 		UserID,
 		UUID,
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
 			Issuer:    j.issuer,
 			IssuedAt:  time.Now().Unix(),
 		},

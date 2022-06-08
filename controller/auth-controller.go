@@ -34,7 +34,7 @@ func (c *authController) Login(ctx *gin.Context) {
 	err := ctx.ShouldBind(&loginDTO)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusBadGateway, response)
+		ctx.JSON(http.StatusOK, response)
 		return
 	}
 	authResult := c.authService.VerifyCredential(loginDTO.Email, loginDTO.Password)
@@ -57,7 +57,7 @@ func (c *authController) Register(ctx *gin.Context) {
 	err := ctx.ShouldBind(&registerDTO)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusBadGateway, response)
+		ctx.JSON(http.StatusOK, response)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (c *authController) RefreshToken(ctx *gin.Context) {
 
 	if errToken.Error() != "Token is expired" || errTokenRefersh != nil {
 		res := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusConflict, res)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, res)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (c *authController) RefreshToken(ctx *gin.Context) {
 
 	if !success {
 		res := helper.BuildErrorResponse("Failed to process request2", "Invalid token", helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusConflict, res)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, res)
 		return
 	} else {
 		result := c.authService.FindByID(userID)

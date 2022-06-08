@@ -61,8 +61,6 @@ func (service *authService) RegisterUser(user dto.RegisterDTO) entity.User {
 		log.Fatalf("Failed mapping %v", err.Error())
 	}
 
-	println(userToCreate.Password)
-
 	res := service.userRepository.InsertUser(userToCreate)
 
 	return res
