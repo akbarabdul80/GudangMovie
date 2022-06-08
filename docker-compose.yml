@@ -2,12 +2,12 @@ version: '3'
 
 services:
   server:
-    image: test-golang
+    image: server-daily-go
     depends_on:
       database:
         condition: service_healthy
     ports:
-      - "2029:8080"
+      - "80:8080"
     environment:
       - DB_USER=root
       - DB_HOST=database
