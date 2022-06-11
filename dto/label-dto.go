@@ -1,5 +1,15 @@
 package dto
 
+type LabelIDDTO struct {
+	ID_label uint64 `json:"id_label" form:"id_label" binding:"required"`
+	UserID   uint64 `json:"user_id,omitempty" form:"user_id,omitempty"`
+}
+
+type LabelDeleteDTO struct {
+	ID_label uint64 `json:"id_label" form:"id_label" binding:"required"`
+	UserID   uint64 `json:"user_id,omitempty" form:"user_id,omitempty"`
+}
+
 type LabelUpdateDTO struct {
 	ID_label    uint64 `json:"id_label" form:"id_label" binding:"required"`
 	Name_label  string `json:"name_label" form:"name_label" binding:"required"`

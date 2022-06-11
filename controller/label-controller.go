@@ -13,8 +13,10 @@ import (
 
 type LabelController interface {
 	GetLabel(ctx *gin.Context)
+	GetLabelByID(ctx *gin.Context)
 	CreateLabel(ctx *gin.Context)
 	UpdateLabel(ctx *gin.Context)
+	DeleteLabel(ctx *gin.Context)
 }
 
 type labelController struct {
@@ -51,6 +53,39 @@ func (c *labelController) GetLabel(context *gin.Context) {
 		return
 	}
 	res := helper.BuildResponse(true, "OK!", label)
+	context.JSON(200, res)
+}
+
+func (c *labelController) GetLabelByID(context *gin.Context) {
+	label := dto.LabelIDDTO{}
+	err := context.ShouldBindJSON(&label)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		panic(errToken.Error())
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	res_label, err := c.labelService.GetLabelByID(id, label.ID_label)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	res := helper.BuildResponse(true, "OK!", res_label)
 	context.JSON(200, res)
 }
 
@@ -121,5 +156,41 @@ func (c *labelController) UpdateLabel(context *gin.Context) {
 		return
 	}
 	res := helper.BuildResponse(true, "OK!", userToUpdate)
+	context.JSON(200, res)
+}
+
+func (c *labelController) DeleteLabel(context *gin.Context) {
+	label := dto.LabelDeleteDTO{}
+	err := context.ShouldBindJSON(&label)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		response := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	label.UserID = id
+	reslabel, err := c.labelService.DeleteLabel(label)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	res := helper.BuildResponse(true, "OK!", reslabel)
 	context.JSON(200, res)
 }

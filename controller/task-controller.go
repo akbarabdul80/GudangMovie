@@ -14,8 +14,11 @@ import (
 type TaskController interface {
 	GetTask(ctx *gin.Context)
 	GetTaskToday(ctx *gin.Context)
+	GetTaskByID(ctx *gin.Context)
 	CreateTask(ctx *gin.Context)
 	UpdateTask(ctx *gin.Context)
+	DeleteTask(ctx *gin.Context)
+	ChecklistTask(ctx *gin.Context)
 }
 
 type taskController struct {
@@ -52,6 +55,38 @@ func (c *taskController) GetTask(context *gin.Context) {
 		return
 	}
 	res := helper.BuildResponse(true, "OK!", task)
+	context.JSON(200, res)
+}
+
+func (c *taskController) GetTaskByID(context *gin.Context) {
+	task := dto.TaskIDDTO{}
+	err := context.ShouldBindJSON(&task)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		panic(errToken.Error())
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	task1, err := c.taskService.GetTaskByID(id, task.ID_task)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	res := helper.BuildResponse(true, "OK!", task1)
 	context.JSON(200, res)
 }
 
@@ -141,6 +176,80 @@ func (c *taskController) UpdateTask(context *gin.Context) {
 
 	task.UserID = id
 	userToUpdate, err := c.taskService.UpdateTask(task)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	res := helper.BuildResponse(true, "OK!", userToUpdate)
+	context.JSON(200, res)
+}
+
+func (c *taskController) ChecklistTask(context *gin.Context) {
+	task := dto.TaskChecklistDTO{}
+	err := context.ShouldBindJSON(&task)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		response := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	task.UserID = id
+	err1 := c.taskService.ChecklistTask(task)
+	if err1 != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	res := helper.BuildResponse(true, "OK!", nil)
+	context.JSON(200, res)
+}
+
+func (c *taskController) DeleteTask(context *gin.Context) {
+	task := dto.TaskDeleteDTO{}
+	err := context.ShouldBindJSON(&task)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		response := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	task.UserID = id
+	userToUpdate, err := c.taskService.DeleteTask(task)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)

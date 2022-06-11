@@ -7,6 +7,7 @@ import (
 
 type LabelRepository interface {
 	GetLabel(userID uint64) ([]entity.Label_get, error)
+	GetLabelByID(userID uint64, labelID uint64) (entity.Label_get, error)
 	InsertLabel(label entity.Label) (entity.Label, error)
 	UpdateLabel(label entity.Label) (entity.Label, error)
 	DeleteLabel(label entity.Label) (entity.Label, error)
@@ -29,6 +30,12 @@ func (db *labelConnection) GetLabel(userID uint64) ([]entity.Label_get, error) {
 	return label, err.Error
 }
 
+func (db *labelConnection) GetLabelByID(userID uint64, labelID uint64) (entity.Label_get, error) {
+	var label entity.Label_get
+	err := db.connection.Model(&entity.Label{}).Select("labels.id_label, labels.name_label, labels.color_label, (SELECT COUNT(*) FROM tasks WHERE tasks.label_id = labels.id_label) as num_task").Where(&entity.Label{UserID: userID, ID_label: labelID}).First(&label)
+	return label, err.Error
+}
+
 func (db *labelConnection) InsertLabel(label entity.Label) (entity.Label, error) {
 	err := db.connection.Save(&label)
 	db.connection.Preload("User").Find(&label)
@@ -41,6 +48,6 @@ func (db *labelConnection) UpdateLabel(label entity.Label) (entity.Label, error)
 }
 
 func (db *labelConnection) DeleteLabel(label entity.Label) (entity.Label, error) {
-	err := db.connection.Delete(&label)
+	err := db.connection.Where("user_id = ?", label.UserID).Delete(&label)
 	return label, err.Error
 }

@@ -11,8 +11,10 @@ import (
 
 type LabelService interface {
 	GetLabel(userID uint64) ([]entity.Label_get, error)
+	GetLabelByID(userID uint64, labelID uint64) (entity.Label_get, error)
 	CreateLabel(label dto.LabelCreateDTO) (entity.Label, error)
 	UpdateLabel(label dto.LabelUpdateDTO) (entity.Label, error)
+	DeleteLabel(label dto.LabelDeleteDTO) (entity.Label, error)
 }
 
 type labelService struct {
@@ -27,6 +29,11 @@ func NewLabelService(labelRepo repository.LabelRepository) LabelService {
 
 func (service *labelService) GetLabel(userID uint64) ([]entity.Label_get, error) {
 	res, err := service.labelRepository.GetLabel(userID)
+	return res, err
+}
+
+func (service *labelService) GetLabelByID(userID uint64, labelID uint64) (entity.Label_get, error) {
+	res, err := service.labelRepository.GetLabelByID(userID, labelID)
 	return res, err
 }
 
@@ -51,6 +58,19 @@ func (service *labelService) UpdateLabel(label dto.LabelUpdateDTO) (entity.Label
 	}
 
 	res, err := service.labelRepository.UpdateLabel(labelToUpdate)
+
+	return res, err
+}
+
+func (service *labelService) DeleteLabel(label dto.LabelDeleteDTO) (entity.Label, error) {
+	labelToDelete := entity.Label{}
+
+	err := smapping.FillStruct(&labelToDelete, smapping.MapFields((&label)))
+	if err != nil {
+		log.Fatalf("Failed mapping %v", err.Error())
+	}
+
+	res, err := service.labelRepository.DeleteLabel(labelToDelete)
 
 	return res, err
 }
