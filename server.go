@@ -14,21 +14,18 @@ var (
 	db *gorm.DB = config.SetupDatabaseConnection()
 	// Respository
 	userRepository  repository.UserRepository  = repository.NewUserRepository(db)
-	labelRepository repository.LabelRepository = repository.NewLabelRepository(db)
-	taskRepository  repository.TaskRepository  = repository.NewTaskRepository(db)
+	movieRepository repository.MovieRepository = repository.NewMovieRepository(db)
 
 	// Service
 	jwtService   service.JWTService   = service.NewJWTService()
 	authService  service.AuthService  = service.NewAuthService(userRepository)
 	userService  service.UserService  = service.NewUserService(userRepository)
-	labelService service.LabelService = service.NewLabelService(labelRepository)
-	taskService  service.TaskService  = service.NewTaskService(taskRepository)
+	movieService service.MovieService = service.NewMovieService(movieRepository)
 
 	// Controller
 	authController  controller.AuthController  = controller.NewAuthController(authService, jwtService)
 	userController  controller.UserController  = controller.NewUserController(userService, jwtService)
-	labelController controller.LabelController = controller.NewLabelController(labelService, jwtService)
-	taskController  controller.TaskController  = controller.NewTaskController(taskService, jwtService)
+	movieController controller.MovieController = controller.NewMovieController(movieService, jwtService)
 )
 
 func main() {
@@ -47,21 +44,12 @@ func main() {
 		userRoutes.GET("/profile", userController.Profile)
 		userRoutes.POST("/update", userController.Update)
 
-		// label
-		userRoutes.GET("/label", labelController.GetLabel)
-		userRoutes.GET("/label-id", labelController.GetLabelByID)
-		userRoutes.PUT("/label", labelController.CreateLabel)
-		userRoutes.DELETE("/label", labelController.DeleteLabel)
-		userRoutes.PATCH("/label", labelController.UpdateLabel)
-
-		// Task
-		userRoutes.GET("/task", taskController.GetTask)
-		userRoutes.GET("/task-today", taskController.GetTaskToday)
-		userRoutes.GET("/task-id", taskController.GetTaskByID)
-		userRoutes.PUT("/task", taskController.CreateTask)
-		userRoutes.DELETE("/task", taskController.DeleteTask)
-		userRoutes.PATCH("/task", taskController.UpdateTask)
-		userRoutes.POST("/task-checklist", taskController.ChecklistTask)
+		// Movie
+		userRoutes.GET("/movie", movieController.GetMovie)
+		userRoutes.GET("/movie-id", movieController.GetMovieByID)
+		userRoutes.PUT("/movie", movieController.CreateMovie)
+		userRoutes.DELETE("/movie", movieController.DeleteMovie)
+		userRoutes.PATCH("/movie	", movieController.WatchMovie)
 	}
 
 	r.Run("0.0.0.0:8081")

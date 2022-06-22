@@ -2,7 +2,7 @@ version: '3'
 
 services:
   server:
-    image: server-daily-go
+    image: gudangmovie-server-go
     depends_on:
       database:
         condition: service_healthy
@@ -11,7 +11,7 @@ services:
     environment:
       - DB_USER=root
       - DB_HOST=database
-      - DB_NAME=daily-today
+      - DB_NAME=gudangmovie-server
       - JWT_SECRET="hdWPRahErNM7uAlTPe342JEiXtVQxyyp"
       - JWT_SECRET_REFRESH="hEcI74RpqfUVgEEM0hTwZDF6Ypie4zWP"
       - GIN_MODE=release
@@ -20,7 +20,7 @@ services:
     image: mysql
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-      - MYSQL_DATABASE=daily-today
+      - MYSQL_DATABASE=gudangmovie-server
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u root
       interval: 10s

@@ -11,27 +11,27 @@ import (
 	"github.com/zerodev/golang_api/service"
 )
 
-type LabelController interface {
-	GetLabel(ctx *gin.Context)
-	GetLabelByID(ctx *gin.Context)
-	CreateLabel(ctx *gin.Context)
-	UpdateLabel(ctx *gin.Context)
-	DeleteLabel(ctx *gin.Context)
+type MovieController interface {
+	GetMovie(ctx *gin.Context)
+	GetMovieByID(ctx *gin.Context)
+	CreateMovie(ctx *gin.Context)
+	DeleteMovie(ctx *gin.Context)
+	WatchMovie(ctx *gin.Context)
 }
 
-type labelController struct {
-	labelService service.LabelService
+type movieController struct {
+	movieService service.MovieService
 	jwtService   service.JWTService
 }
 
-func NewLabelController(labelService service.LabelService, jwtService service.JWTService) LabelController {
-	return &labelController{
-		labelService: labelService,
+func NewMovieController(movieService service.MovieService, jwtService service.JWTService) MovieController {
+	return &movieController{
+		movieService: movieService,
 		jwtService:   jwtService,
 	}
 }
 
-func (c *labelController) GetLabel(context *gin.Context) {
+func (c *movieController) GetMovie(context *gin.Context) {
 	authHeader := context.GetHeader("Authorization")
 	token, errToken := c.jwtService.ValidateToken(authHeader)
 	if errToken != nil {
@@ -46,19 +46,19 @@ func (c *labelController) GetLabel(context *gin.Context) {
 		return
 	}
 
-	label, err := c.labelService.GetLabel(id)
+	movie, err := c.movieService.GetMovie(id)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
 		return
 	}
-	res := helper.BuildResponse(true, "OK!", label)
+	res := helper.BuildResponse(true, "OK!", movie)
 	context.JSON(200, res)
 }
 
-func (c *labelController) GetLabelByID(context *gin.Context) {
-	label := dto.LabelIDDTO{}
-	err := context.ShouldBindJSON(&label)
+func (c *movieController) GetMovieByID(context *gin.Context) {
+	movie := dto.MovieIDDTO{}
+	err := context.ShouldBindJSON(&movie)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
@@ -79,19 +79,19 @@ func (c *labelController) GetLabelByID(context *gin.Context) {
 		return
 	}
 
-	res_label, err := c.labelService.GetLabelByID(id, label.ID_label)
+	res_movie, err := c.movieService.GetMovieByID(id, movie.ID_movie_user)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
 		return
 	}
-	res := helper.BuildResponse(true, "OK!", res_label)
+	res := helper.BuildResponse(true, "OK!", res_movie)
 	context.JSON(200, res)
 }
 
-func (c *labelController) CreateLabel(context *gin.Context) {
-	label := dto.LabelCreateDTO{}
-	err := context.ShouldBindJSON(&label)
+func (c *movieController) WatchMovie(context *gin.Context) {
+	movie := dto.MovieIDDTO{}
+	err := context.ShouldBindJSON(&movie)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
@@ -112,8 +112,41 @@ func (c *labelController) CreateLabel(context *gin.Context) {
 		return
 	}
 
-	label.UserID = id
-	userToCreate, err := c.labelService.CreateLabel(label)
+	err_db := c.movieService.WatchMovie(id, movie.ID_movie_user)
+	if err_db != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+	res := helper.BuildResponse(true, "OK!", nil)
+	context.JSON(200, res)
+}
+
+func (c *movieController) CreateMovie(context *gin.Context) {
+	movie := dto.MovieCreateDTO{}
+	err := context.ShouldBindJSON(&movie)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	authHeader := context.GetHeader("Authorization")
+	token, errToken := c.jwtService.ValidateToken(authHeader)
+	if errToken != nil {
+		panic(errToken.Error())
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
+	if err != nil {
+		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
+		context.AbortWithStatusJSON(http.StatusBadGateway, response)
+		return
+	}
+
+	movie.UserID = id
+	userToCreate, err := c.movieService.CreateMovie(movie)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
@@ -123,9 +156,9 @@ func (c *labelController) CreateLabel(context *gin.Context) {
 	context.JSON(200, res)
 }
 
-func (c *labelController) UpdateLabel(context *gin.Context) {
-	label := dto.LabelUpdateDTO{}
-	err := context.ShouldBindJSON(&label)
+func (c *movieController) DeleteMovie(context *gin.Context) {
+	movie := dto.MovieIDDTO{}
+	err := context.ShouldBindJSON(&movie)
 	if err != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
@@ -148,49 +181,13 @@ func (c *labelController) UpdateLabel(context *gin.Context) {
 		return
 	}
 
-	label.UserID = id
-	userToUpdate, err := c.labelService.UpdateLabel(label)
-	if err != nil {
+	movie.UserID = id
+	err_db := c.movieService.DeleteMovie(movie.UserID, movie.ID_movie_user)
+	if err_db != nil {
 		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
 		context.AbortWithStatusJSON(http.StatusBadGateway, response)
 		return
 	}
-	res := helper.BuildResponse(true, "OK!", userToUpdate)
-	context.JSON(200, res)
-}
-
-func (c *labelController) DeleteLabel(context *gin.Context) {
-	label := dto.LabelDeleteDTO{}
-	err := context.ShouldBindJSON(&label)
-	if err != nil {
-		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		context.AbortWithStatusJSON(http.StatusBadGateway, response)
-		return
-	}
-
-	authHeader := context.GetHeader("Authorization")
-	token, errToken := c.jwtService.ValidateToken(authHeader)
-	if errToken != nil {
-		response := helper.BuildErrorResponse("Failed to process request", errToken.Error(), helper.EmptyObj{})
-		context.AbortWithStatusJSON(http.StatusBadGateway, response)
-		return
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
-	id, err := strconv.ParseUint(claims["user_id"].(string), 10, 64)
-	if err != nil {
-		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		context.AbortWithStatusJSON(http.StatusBadGateway, response)
-		return
-	}
-
-	label.UserID = id
-	reslabel, err := c.labelService.DeleteLabel(label)
-	if err != nil {
-		response := helper.BuildErrorResponse("Failed to process request", err.Error(), helper.EmptyObj{})
-		context.AbortWithStatusJSON(http.StatusBadGateway, response)
-		return
-	}
-	res := helper.BuildResponse(true, "OK!", reslabel)
+	res := helper.BuildResponse(true, "OK!", nil)
 	context.JSON(200, res)
 }
