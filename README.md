@@ -12,5 +12,5 @@ sh run.sh
 
 # Postman
 ```
-https://www.postman.com/zerodevind/workspace/daily-api/overview
+https://www.postman.com/zerodevind/workspace/gudangmovie
 ```
