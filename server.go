@@ -49,7 +49,7 @@ func main() {
 		userRoutes.GET("/movie-id", movieController.GetMovieByID)
 		userRoutes.PUT("/movie", movieController.CreateMovie)
 		userRoutes.DELETE("/movie", movieController.DeleteMovie)
-		userRoutes.PATCH("/movie	", movieController.WatchMovie)
+		userRoutes.PATCH("/movie", movieController.WatchMovie)
 	}
 
 	r.Run("0.0.0.0:8081")
